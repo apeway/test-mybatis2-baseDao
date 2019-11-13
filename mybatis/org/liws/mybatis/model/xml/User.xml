@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 为了方便调用，mapper文件的namespace最好设置为VO类的全路径类名 -->
+<mapper namespace="org.liws.mybatis.model.User"> 		
+
+	<!-- ======================================================================== 
+	add、update、delete  
+	  ======================================================================== -->
+	
+	<insert id="add" parameterType="User">
+		insert into t_user (user_name, password, nickname, type) 
+		values (#{username}, #{password}, #{nickname}, #{type})
+	</insert>
+	
+	<update id="update" parameterType="User">
+		update t_user set 
+		nickname = #{nickname}, password = #{password}, type = #{type} 
+		where id = #{id}
+	</update>
+
+	<delete id="delete" parameterType="int">
+		delete from t_user where id = #{id}
+	</delete>
+	
+	
+	<!-- ======================================================================== 
+	load相关【要用collect标签取关联的Addresss列表】
+	  ======================================================================== -->
+	
+	<select id="load" parameterType="int" resultMap="userMap">
+		select *, t1.id as u_id, t2.id as a_id 
+		from t_user t1 
+		left join t_address t2 on(t1.id = t2.user_id) 
+		where t1.id = #{id}
+	</select>
+	
+	<select id="load_by_username" parameterType="string" resultMap="userMap">
+		select *, t1.id as u_id, t2.id as a_id 
+		from t_user t1 
+		left join t_address t2 on(t1.id = t2.user_id)
+		where t1.user_name = #{username}
+	</select>
+	
+	<!-- 
+	当数据库中的字段名和对象的属性名不完全一致时需要通过resultMap来映射。
+	autoMapping="true"表示自动映射User的所有属性，但对于其中的关联对象属性必须手动映射想要映射的所有列。
+	 -->
+	<resultMap type="User" id="userMap" autoMapping="true">
+		<id column="u_id" property="id" /> 
+		
+		<!-- nickname、password、type能成功自动映射，可省略 -->
+		<result column="user_name" property="username" />
+		
+		<collection property="addresses" ofType="Address">
+			<id column="a_id" property="id" />
+
+			<!-- 不希望映射address对象的user、phone属性 ，就不配置相关映射-->
+			<result column="post_code" property="postcode" />
+			<result column="name" property="name" />
+		</collection>
+	</resultMap>
+	
+	
+	<!-- ======================================================================== 
+	find相关【列表用户时不用列出用户的地址，就不取关联了】。	
+		where标签、
+		if标签、
+		choose+when+otherwise标签
+	  ======================================================================== -->
+	  
+	<select id="find" parameterType="map" resultType="User">
+		select * from t_user
+		
+		<!-- 动态SQL -->
+		<where>
+			<if test="name != null">(user_name like #{name} or nickname like #{name})</if>
+			<if test="type != null">and type = #{type}</if>
+		</where>
+		
+		<if test="sort != null">
+			order by ${sort}
+			<choose>
+				<when test="order != null">${order}</when>
+				<otherwise>desc</otherwise>
+			</choose>
+		</if>
+		
+		limit #{pageOffset}, #{pageSize}
+	</select>
+	
+	<select id="find_count" parameterType="map" resultType="int">
+		select count(*) from t_user 
+		<where>
+			<if test="name != null">(user_name like #{name} or nickname like #{name})</if>
+			<if test="type != null">and type = #{type}</if>
+		</where>
+	</select>	
+	
+</mapper>

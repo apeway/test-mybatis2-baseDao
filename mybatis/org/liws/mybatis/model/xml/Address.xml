@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="org.liws.mybatis.model.Address">
+	
+	<!-- ======================================================================== 
+	add、update、delete
+	  ======================================================================== -->
+	  
+	<!-- 1、注意 #{user.id} -->
+	<insert id="add" parameterType="Address">
+		insert into t_address (name, phone, post_code, user_id) 
+		values (#{name}, #{phone}, #{postcode}, #{user.id})
+	</insert>		
+	
+	<update id="update" parameterType="Address">
+		update t_address set 
+		name = #{name}, phone = #{phone}, post_code = #{postcode} 
+		where id = #{id}
+	</update>
+	
+	<delete id="delete" parameterType="int">
+		delete from t_address 
+		where id = #{id}
+	</delete>
+	
+	
+	<!-- ======================================================================== 
+	【不推荐】分多条sql来处理一对一、一对多，会产生(N+1)问题，即取N行结果执行了(N+1)条sql。
+		对load方法影响还好，但对list方法影响极大！
+	  ======================================================================== -->
+	
+	<select id="load_" parameterType="int" resultMap="addressMap_">
+		select * from t_address where id = #{id}
+	</select>
+	
+	<select id="list_" parameterType="map" resultMap="addressMap_">
+		select * from t_address where user_id = #{userId}
+	</select>
+	
+	<resultMap type="Address" id="addressMap_" autoMapping="true">
+		<id column="id" property="id" />
+		
+		<!-- name、phone能成功自动映射，可省略 -->
+		<result column="post_code" property="postcode"/>
+		
+		<!-- 使用【association+select方式】取关联对象最大的问题就是【(N+1)问题】 -->
+		<association column="user_id" property="user" javaType="User"
+			select="org.liws.mybatis.model.User.load" />
+	</resultMap>
+
+	
+	<!-- ======================================================================== 
+	【推荐】仅用一条sql来处理一对一、一对多 ，避免了(N+1)问题
+	  ======================================================================== -->
+	 
+	<select id="load" parameterType="int" resultMap="addressMap">
+		select *, t1.id as 'a_id' 
+		from t_address t1 
+		right join t_user t2 on t1.user_id = t2.id 
+		where t1.id = #{id}
+	</select>
+	
+	<select id="list" parameterType="map" resultMap="addressMap">
+		select *, t1.id as 'a_id' 
+		from t_address t1 
+		right join t_user t2 on t1.user_id = t2.id
+		where t2.id = #{userId}
+	</select>
+	
+	<resultMap type="Address" id="addressMap" autoMapping="true">
+		<id column="a_id" property="id" />
+		
+		<!-- name、phone能成功自动映射，可省略 -->
+		<result column="post_code" property="postcode"/>
+		
+		<association property="user" javaType="User">
+			<id column="user_id" property="id"/>
+			<!-- 不希望映射username、password -->
+			<result column="nickname" property="nickname"/>
+			<result column="type" property="type"/>
+		</association>
+	</resultMap>
+	
+	
+</mapper>
