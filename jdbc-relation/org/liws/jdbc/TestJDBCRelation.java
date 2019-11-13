@@ -1,4 +1,4 @@
-package org.liws.jdbc.test;
+package org.liws.jdbc;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
