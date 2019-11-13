@@ -10,7 +10,7 @@ public class PropertiesUtil {
 		try {
 			if(jdbcProp==null) {
 				jdbcProp = new Properties();
-				jdbcProp.load(PropertiesUtil.class.getClassLoader().getResourceAsStream("jdbc.properties"));
+				jdbcProp.load(PropertiesUtil.class.getClassLoader().getResourceAsStream("config/jdbc.properties"));
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

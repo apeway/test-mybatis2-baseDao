@@ -2,6 +2,7 @@ package org.liws.jdbc.util;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
@@ -17,7 +18,7 @@ public class DBUtil {
 		Connection con = null;
 		try {
 			Class.forName(driver);
-			con = DriverManager.getConnection(url, username, password);//jar包放jdk的ext下
+			con = DriverManager.getConnection(url, username, password); // jar包放jdk的ext下
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -32,7 +33,7 @@ public class DBUtil {
 		}
 	}
 	
-	public static void close(java.sql.PreparedStatement ps) {
+	public static void close(PreparedStatement ps) {
 		try {
 			if (ps != null) ps.close();
 		} catch (SQLException e) {
