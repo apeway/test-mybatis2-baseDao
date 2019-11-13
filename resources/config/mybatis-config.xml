@@ -11,8 +11,8 @@
 		<setting name="autoMappingBehavior" value="FULL" />
 	</settings>
     
-	<typeAliases>  			
-		<typeAlias type="org.liws.mybatis.model"/>
+	<typeAliases>  		
+		<package name="org.liws.mybatis.model"/>
 	</typeAliases>
 	
 	<environments default="development">

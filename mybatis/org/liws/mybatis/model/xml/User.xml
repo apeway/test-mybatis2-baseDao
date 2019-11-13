@@ -10,7 +10,9 @@
 	add、update、delete  
 	  ======================================================================== -->
 	
-	<insert id="add" parameterType="User">
+	<!-- 获取自增id配置 [useGeneratedKeys="true" keyProperty="id"] -->
+	<insert id="add" parameterType="User"
+			useGeneratedKeys="true" keyProperty="id">
 		insert into t_user (user_name, password, nickname, type) 
 		values (#{username}, #{password}, #{nickname}, #{type})
 	</insert>

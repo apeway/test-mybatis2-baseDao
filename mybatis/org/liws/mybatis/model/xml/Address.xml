@@ -9,8 +9,9 @@
 	add、update、delete
 	  ======================================================================== -->
 	  
-	<!-- 1、注意 #{user.id} -->
-	<insert id="add" parameterType="Address">
+	<!-- 注意 #{user.id} -->
+	<insert id="add" parameterType="Address"
+			useGeneratedKeys="true" keyProperty="id">
 		insert into t_address (name, phone, post_code, user_id) 
 		values (#{name}, #{phone}, #{postcode}, #{user.id})
 	</insert>		
@@ -26,6 +27,43 @@
 		where id = #{id}
 	</delete>
 	
+	<!-- ======================================================================== 
+	【推荐】仅用一条sql来处理一对一、一对多 ，避免了(N+1)问题
+	  ======================================================================== -->
+	 
+	<select id="load" parameterType="int" resultMap="addressMap">
+		select *, t1.id as 'a_id' 
+		from t_address t1 
+		left join t_user t2 on t1.user_id = t2.id 
+		where t1.id = #{id}
+	</select>
+	
+	<select id="list" parameterType="map" resultMap="addressMap">
+		select *, t1.id as 'a_id' 
+		from t_address t1 
+		left join t_user t2 on t1.user_id = t2.id
+		where t2.id = #{userId}
+	</select>
+	
+	<!-- 这里的[autoMapping="true"]表示自动映射Address对象的所有属性，
+			其中不能成功自动映射的属性（如postcode、user）需要手动配置映射 -->
+	<resultMap type="Address" id="addressMap" >
+		
+		<!-- id配置不可省略 -->
+		<id column="a_id" property="id" />
+		
+		<result column="post_code" property="postcode"/>
+		
+		<!-- 这里的[autoMapping="false"]表示仅映射我们手动配置要映射的属性，
+				这里仅希望映射出User对象的id、username、nickname、type属性 -->
+		<association property="user" javaType="User" autoMapping="false">
+			<id column="user_id" property="id"/>
+			<result column="user_name" property="username"/>
+			<result column="nickname" property="nickname"/>
+			<result column="type" property="type"/>
+		</association>
+		
+	</resultMap>
 	
 	<!-- ======================================================================== 
 	【不推荐】分多条sql来处理一对一、一对多，会产生(N+1)问题，即取N行结果执行了(N+1)条sql。
@@ -42,47 +80,10 @@
 	
 	<resultMap type="Address" id="addressMap_" autoMapping="true">
 		<id column="id" property="id" />
-		
-		<!-- name、phone能成功自动映射，可省略 -->
 		<result column="post_code" property="postcode"/>
-		
 		<!-- 使用【association+select方式】取关联对象最大的问题就是【(N+1)问题】 -->
 		<association column="user_id" property="user" javaType="User"
 			select="org.liws.mybatis.model.User.load" />
 	</resultMap>
-
-	
-	<!-- ======================================================================== 
-	【推荐】仅用一条sql来处理一对一、一对多 ，避免了(N+1)问题
-	  ======================================================================== -->
-	 
-	<select id="load" parameterType="int" resultMap="addressMap">
-		select *, t1.id as 'a_id' 
-		from t_address t1 
-		right join t_user t2 on t1.user_id = t2.id 
-		where t1.id = #{id}
-	</select>
-	
-	<select id="list" parameterType="map" resultMap="addressMap">
-		select *, t1.id as 'a_id' 
-		from t_address t1 
-		right join t_user t2 on t1.user_id = t2.id
-		where t2.id = #{userId}
-	</select>
-	
-	<resultMap type="Address" id="addressMap" autoMapping="true">
-		<id column="a_id" property="id" />
-		
-		<!-- name、phone能成功自动映射，可省略 -->
-		<result column="post_code" property="postcode"/>
-		
-		<association property="user" javaType="User">
-			<id column="user_id" property="id"/>
-			<!-- 不希望映射username、password -->
-			<result column="nickname" property="nickname"/>
-			<result column="type" property="type"/>
-		</association>
-	</resultMap>
-	
 	
 </mapper>

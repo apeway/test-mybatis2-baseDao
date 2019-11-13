@@ -17,9 +17,9 @@ public class UserDao extends BaseDao<User> implements IUserDao {
 	public User login(String username, String password) {
 		User u = this.loadByUsername(username);
 		if (u == null)
-			throw new ShopException("用户名不存在!");
+			throw new ShopException("用户名不存在! 错误的用户名为：" + username);
 		if (!password.equals(u.getPassword()))
-			throw new ShopException("用户名密码不正确");
+			throw new ShopException("用户密码不正确! 错误的密码为：" + password);
 		return u;
 	}
 

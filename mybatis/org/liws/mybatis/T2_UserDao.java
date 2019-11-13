@@ -10,63 +10,75 @@ import org.liws.mybatis.util.SystemContext;
 
 public class T2_UserDao {
 	
-	private IUserDao ud = DAOFactory.getUserDao();
+	private IUserDao userDao = DAOFactory.getUserDao();
 	
 	@Test
 	public void testLoadById() {
-		System.out.println(ud.load(1));
+		System.out.println(userDao.load(1));
 	}
 
 	@Test
 	public void testLoadByUsername() {
-		System.out.println(ud.loadByUsername("admin"));
+		System.out.println(userDao.loadByUsername("admin"));
 	}
 
 	@Test
 	public void testLogin() {
-		User u = ud.login("admin", "123");
-		System.out.println(u.getNickname());
+		// login 1
+		String userId = "admin";
+		String password = "123";
+		User u = userDao.login(userId, password);
+		System.out.println("登录成功，登录用户为：" + u.getNickname());
 		
+		// login 2
+		userId = "adminm";
+		password = "123";
 		try{
-			u = ud.login("adminmmm", "123");
+			u = userDao.login(userId, password);
 		}catch(ShopException s){
 			System.out.println(s.getMessage());
 		}
 		
+		// login 3
+		userId = "admin";
+		password = "123456";
 		try{
-			u = ud.login("admin", "12333");
+			u = userDao.login("admin", password);
 		}catch(ShopException s){
 			System.out.println(s.getMessage());
 		}
 	}
 
 	@Test
-	public void testAdd(){
-		User u = new User();
-		u.setUsername("ccc");
-		u.setPassword("123");
-		u.setNickname("曹操");
-		u.setType(1);
+	public void test_Add_update_delete(){
+		User user = new User();
+		user.setUsername("ccc");
+		user.setPassword("123");
+		user.setNickname("曹操");
+		user.setType(1);
+
+		// add
+		userDao.add(user);
+		int autoId = user.getId();
+		System.out.println("生成的id=" + autoId);
+		user = userDao.load(autoId);
+		System.out.println("新增的user=" + user);
 		
-		ud.add(u);
-		System.out.println(ud.loadByUsername("ccc"));
+		// update 
+		user.setPassword("123456");
+		user.setNickname("曹操double fuck");
+		user.setType(0);
+		userDao.update(user);
+		System.out.println("修改后的user=" + userDao.load(autoId));
+		
+		// delete
+		userDao.delete(autoId);
+		System.out.println("delete后的user=" + userDao.load(autoId));
 	}
 	
-	@Test
-	public void testUpdate() {
-		User u = ud.loadByUsername("ccc");
-		if(u != null) {
-			System.out.println("update前：" + u);
-			
-			u.setPassword("2222");
-			u.setNickname("曹操double fuck");
-			u.setType(0);
-			ud.update(u);
-			System.out.println("update后：" + ud.loadByUsername("ccc"));
-		}
-		
-	}
-
+	/**
+	 * 先执行UsersInitMain准备测试数据
+	 */
 	@Test
 	public void testFind() {
 		SystemContext.setPageOffset(0);
@@ -74,24 +86,13 @@ public class T2_UserDao {
 		SystemContext.setSort("user_name");
 		SystemContext.setOrder("desc");
 		
-		Pager<User> ps = ud.find("超");
+		Pager<User> ps = userDao.find("超");
 		System.out.println("找到的users数量: " + ps.getTotalRecord());
 		System.out.println("找到的users: " + ps.getDatas());
 	
-		ps = ud.find("超", 1);
+		ps = userDao.find("超", 1);
 		System.out.println("找到的users数量: " + ps.getTotalRecord());
 		System.out.println("找到的users: " + ps.getDatas());
-	}
-
-	@Test
-	public void testDelete() {
-		User u = ud.loadByUsername("ccc");
-		if(u != null) {
-			System.out.println("delete前：" + u);
-			
-			ud.delete(u.getId());
-			System.out.println("delete后：" + ud.loadByUsername("ccc")); // null
-		}
 	}
 
 }
